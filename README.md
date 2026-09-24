@@ -41,6 +41,25 @@ ditto "dist/Mac Toolbox.app" "/Applications/Mac Toolbox.app"
 open "/Applications/Mac Toolbox.app"
 ```
 
+### Updating the installed app
+
+For a personal development install, build, replace, and reopen the app with:
+
+```sh
+scripts/update-installed-app.sh
+```
+
+To enable repository-local Git automation once:
+
+```sh
+scripts/install-git-automation.sh
+```
+
+This adds `git ship`, which pushes `main` and updates the installed app only after
+the push succeeds. Pulling a merge into `main` also updates the app automatically.
+Other branches are ignored. Git does not provide a client-side `post-push` hook,
+so `git ship` is the safe push-then-update equivalent.
+
 Once it is running, open the toolbox icon in the menu bar. Turn on **Launch at Login** if you want its rules enforced after every login.
 
 ## Built-in display control
