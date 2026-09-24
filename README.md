@@ -1,6 +1,16 @@
-# Internal Display Auto Off
+# Mac Toolbox
 
-A small native macOS menu-bar utility for an open MacBook connected to an external display. With Auto enabled, it disables the built-in panel when at least one usable external display is active and restores it when the last external display disconnects.
+A small, personal native macOS menu-bar toolbox. It currently manages the built-in display and blocks Apple Music from running.
+
+## Apple Music blocker
+
+With **Block Apple Music** enabled, the toolbox watches for the real system app at `/System/Applications/Music.app` and terminates it whenever it launches. A periodic guard catches launches from media keys and background services. The setting is enabled by default and persists between launches. Enable **Launch at Login** for continuous protection.
+
+The blocker checks both the Apple Music bundle identifier and its system path, so it does not terminate unrelated apps that happen to reuse the identifier. Blocking can be paused at any time from the menu.
+
+## Built-in display automation
+
+With display automation enabled, the toolbox disables the built-in panel when at least one usable external display is active and restores it when the last external display disconnects.
 
 External-display removal is handled immediately from CoreGraphics' removal event, outside the callback itself. A short debounced topology check then reconciles the final state. This avoids waiting for macOS' external-display entry to disappear from a later topology snapshot.
 
@@ -12,7 +22,7 @@ scripts/package-app.sh
 open dist/InternalDisplayAutoOff.app
 ```
 
-The app has no Dock icon. Use the display icon in the menu bar to inspect status, pause automation, restore the internal panel, optionally enable launch at login, or quit.
+The app has no Dock icon. Use the toolbox icon in the menu bar to manage its features, enable launch at login, or quit.
 
 ## Important private-API caveat
 

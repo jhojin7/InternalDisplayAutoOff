@@ -13,14 +13,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct InternalDisplayAutoOffApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var manager: DisplayManager
+    @StateObject private var musicBlocker: MusicBlocker
 
     init() {
         let manager = DisplayManager()
         _manager = StateObject(wrappedValue: manager)
+        _musicBlocker = StateObject(wrappedValue: MusicBlocker())
     }
 
     var body: some Scene {
         MenuBarExtra {
+            Text("Displays").font(.headline)
             VStack(alignment: .leading, spacing: 3) {
                 Text(manager.status).font(.headline)
                 Text(manager.detail).font(.caption).foregroundStyle(.secondary)
@@ -34,6 +37,15 @@ struct InternalDisplayAutoOffApp: App {
             Divider()
             Toggle("Auto-disable Built-in Display", isOn: $manager.autoModeEnabled)
             Button("Restore Internal Display") { manager.restoreInternalDisplay() }
+
+            Divider()
+            Text("App Blocking").font(.headline)
+            Toggle("Block Apple Music", isOn: $musicBlocker.isEnabled)
+            Text(musicBlocker.status)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Divider()
             Toggle("Launch at Login", isOn: $manager.launchAtLogin)
             Divider()
             Button("Quit") {
@@ -41,8 +53,8 @@ struct InternalDisplayAutoOffApp: App {
                 NSApplication.shared.terminate(nil)
             }
         } label: {
-            Image(systemName: "display")
-                .accessibilityLabel("Internal Display Auto Off")
+            Image(systemName: "wrench.and.screwdriver")
+                .accessibilityLabel("Mac Toolbox")
                 .task { appDelegate.manager = manager }
         }
         .menuBarExtraStyle(.menu)
