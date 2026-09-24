@@ -14,11 +14,13 @@ struct MacToolboxApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var manager: DisplayManager
     @StateObject private var musicBlocker: MusicBlocker
+    @StateObject private var displayEffects: DisplayEffectsController
 
     init() {
         let manager = DisplayManager()
         _manager = StateObject(wrappedValue: manager)
         _musicBlocker = StateObject(wrappedValue: MusicBlocker())
+        _displayEffects = StateObject(wrappedValue: DisplayEffectsController())
     }
 
     var body: some Scene {
@@ -44,6 +46,26 @@ struct MacToolboxApp: App {
             Text(musicBlocker.status)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            Divider()
+            Text("Display Effects")
+                .font(.headline)
+                .onAppear { displayEffects.refresh() }
+            Toggle("Color Filters", isOn: Binding(
+                get: { displayEffects.colorFilterEnabled },
+                set: { displayEffects.setColorFilterEnabled($0) }
+            ))
+            .disabled(!displayEffects.colorFilterAvailable)
+            Toggle("Night Shift", isOn: Binding(
+                get: { displayEffects.nightShiftEnabled },
+                set: { displayEffects.setNightShiftEnabled($0) }
+            ))
+            .disabled(!displayEffects.nightShiftAvailable)
+            if !displayEffects.status.isEmpty {
+                Text(displayEffects.status)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Divider()
             Toggle("Launch at Login", isOn: $manager.launchAtLogin)

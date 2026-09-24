@@ -8,6 +8,7 @@ Mac Toolbox currently handles two jobs:
 
 - **External-display mode** disables the built-in panel while a usable external display is connected and restores it when the last external display goes away.
 - **Apple Music blocking** closes the system Music app whenever macOS, a media key, or another service tries to launch it.
+- **Display effects** provides direct menu-bar switches for macOS Color Filters and Night Shift.
 
 Both features are independently switchable. The app has no Dock icon, remembers its settings, and can start at login.
 
@@ -89,6 +90,12 @@ The match uses both:
 
 Checking both values prevents the blocker from closing an unrelated app that happens to reuse Music's bundle identifier. Disabling the switch immediately pauses the rule; it does not modify or remove Apple's app.
 
+## Display effects
+
+The **Color Filters** and **Night Shift** switches control the corresponding macOS display settings directly. They do not invoke Apple Shortcuts. Their state is read from the system when the app starts and refreshed as the menu-bar app updates.
+
+These controls use macOS interfaces that Apple does not document for third-party apps: MediaAccessibility preferences for Color Filters and CoreBrightness for Night Shift. Like the built-in display control, they may require maintenance after a macOS update.
+
 ## Design
 
 Mac Toolbox is a small SwiftUI and AppKit application built with Swift Package Manager.
@@ -103,6 +110,8 @@ Mac Toolbox is a small SwiftUI and AppKit application built with Swift Package M
 | `SkyLightBackend` | Narrow wrapper around the private display API |
 | `MusicBlocker` | Launch observation, periodic checks, and termination |
 | `MusicBlockPolicy` | Exact identification of the system Music app |
+| `DisplayEffectsController` | Reads and changes Color Filters and Night Shift state |
+| `SystemControlsShim` | Narrow Objective-C bridge to the underlying macOS display-effect APIs |
 
 The code deliberately keeps policy separate from AppKit side effects so the important decisions can be tested without changing the current display configuration or launching applications.
 
