@@ -15,6 +15,10 @@ let package = Package(
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("ServiceManagement")
             ]
+        ),
+        .testTarget(
+            name: "InternalDisplayAutoOffTests",
+            dependencies: ["InternalDisplayAutoOff"]
         )
     ]
 )

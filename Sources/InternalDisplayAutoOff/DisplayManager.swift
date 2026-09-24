@@ -41,8 +41,26 @@ final class DisplayManager: ObservableObject {
             backend = nil
             detail = error.localizedDescription
         }
-        monitor = DisplayMonitor { [weak self] in self?.evaluate(reason: "Display configuration changed") }
+        monitor = DisplayMonitor(
+            onEvent: { [weak self] event in self?.handleDisplayEvent(event) },
+            onChange: { [weak self] in self?.evaluate(reason: "Display configuration changed") }
+        )
         evaluate(reason: "App launched")
+    }
+
+    private func handleDisplayEvent(_ event: DisplayChangeEvent) {
+        guard DisplaySwitchPolicy.shouldRestoreImmediately(
+            for: event,
+            internalDisplayID: cachedInternalDisplayID,
+            internalIsActive: internalIsActive,
+            autoModeEnabled: autoModeEnabled
+        ), let internalDisplayID = cachedInternalDisplayID else { return }
+
+        setInternalDisplay(
+            internalDisplayID,
+            enabled: true,
+            reason: "External display removal detected"
+        )
     }
 
     func evaluate(reason: String) {

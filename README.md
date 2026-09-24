@@ -2,6 +2,8 @@
 
 A small native macOS menu-bar utility for an open MacBook connected to an external display. With Auto enabled, it disables the built-in panel when at least one usable external display is active and restores it when the last external display disconnects.
 
+External-display removal is handled immediately from CoreGraphics' removal event, outside the callback itself. A short debounced topology check then reconciles the final state. This avoids waiting for macOS' external-display entry to disappear from a later topology snapshot.
+
 ## Build and run
 
 ```sh

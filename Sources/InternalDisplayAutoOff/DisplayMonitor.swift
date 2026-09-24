@@ -9,16 +9,21 @@ private func displayReconfigurationCallback(
 ) {
     guard let userInfo else { return }
     let monitor = Unmanaged<DisplayMonitor>.fromOpaque(userInfo).takeUnretainedValue()
-    monitor.displayConfigurationDidChange()
+    monitor.displayConfigurationDidChange(displayID: display, flags: flags)
 }
 
 @MainActor
 final class DisplayMonitor {
     private let onChange: () -> Void
+    private let onEvent: (DisplayChangeEvent) -> Void
     private var pendingEvaluation: DispatchWorkItem?
     private var observers: [NSObjectProtocol] = []
 
-    init(onChange: @escaping () -> Void) {
+    init(
+        onEvent: @escaping (DisplayChangeEvent) -> Void,
+        onChange: @escaping () -> Void
+    ) {
+        self.onEvent = onEvent
         self.onChange = onChange
         CGDisplayRegisterReconfigurationCallback(
             displayReconfigurationCallback,
@@ -36,8 +41,15 @@ final class DisplayMonitor {
         }
     }
 
-    nonisolated func displayConfigurationDidChange() {
-        Task { @MainActor [weak self] in self?.scheduleEvaluation(after: 0.75) }
+    nonisolated func displayConfigurationDidChange(
+        displayID: CGDirectDisplayID,
+        flags: CGDisplayChangeSummaryFlags
+    ) {
+        let event = DisplayChangeEvent(displayID: displayID, flags: flags)
+        Task { @MainActor [weak self] in
+            self?.onEvent(event)
+            self?.scheduleEvaluation(after: 0.25)
+        }
     }
 
     func scheduleEvaluation(after delay: TimeInterval = 0.25) {
