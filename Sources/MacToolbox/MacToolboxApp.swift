@@ -10,7 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct InternalDisplayAutoOffApp: App {
+struct MacToolboxApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var manager: DisplayManager
     @StateObject private var musicBlocker: MusicBlocker

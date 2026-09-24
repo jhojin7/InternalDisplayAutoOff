@@ -5,17 +5,19 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>InternalDisplayAutoOff</string>
+    <string>MacToolbox</string>
     <key>CFBundleIdentifier</key>
-    <string>local.hojin.InternalDisplayAutoOff</string>
+    <string>local.hojin.MacToolbox</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
     <string>Mac Toolbox</string>
+    <key>CFBundleDisplayName</key>
+    <string>Mac Toolbox</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.0</string>
+    <string>0.3.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>

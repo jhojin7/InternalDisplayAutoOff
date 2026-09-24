@@ -1,6 +1,6 @@
 import CoreGraphics
 import Testing
-@testable import InternalDisplayAutoOff
+@testable import MacToolbox
 
 @Suite("Display switching policy")
 struct DisplaySwitchPolicyTests {

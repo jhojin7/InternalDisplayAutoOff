@@ -162,7 +162,7 @@ final class DisplayManager: ObservableObject {
     }
 
     private func log(_ reason: String) {
-        NSLog("[InternalDisplayAutoOff] %@ — %@; status=%@; external=%d; internalActive=%@",
+        NSLog("[MacToolbox] %@ — %@; status=%@; external=%d; internalActive=%@",
               reason, detail, status, externalDisplayCount, internalIsActive.description)
     }
 }

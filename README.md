@@ -1,45 +1,133 @@
 # Mac Toolbox
 
-A small, personal native macOS menu-bar toolbox. It currently manages the built-in display and blocks Apple Music from running.
+A native menu-bar app for the macOS behavior I want to control myself.
 
-## Apple Music blocker
+I started this project because I wanted my MacBook's built-in display to switch off when I connected an external monitor—without closing the lid, mirroring displays, or turning the brightness down. It has since become a home for other small fixes that are useful every day but do not deserve a separate app.
 
-With **Block Apple Music** enabled, the toolbox watches for the real system app at `/System/Applications/Music.app` and terminates it whenever it launches. A periodic guard catches launches from media keys and background services. The setting is enabled by default and persists between launches. Enable **Launch at Login** for continuous protection.
+Mac Toolbox currently handles two jobs:
 
-The blocker checks both the Apple Music bundle identifier and its system path, so it does not terminate unrelated apps that happen to reuse the identifier. Blocking can be paused at any time from the menu.
+- **External-display mode** disables the built-in panel while a usable external display is connected and restores it when the last external display goes away.
+- **Apple Music blocking** closes the system Music app whenever macOS, a media key, or another service tries to launch it.
 
-## Built-in display automation
+Both features are independently switchable. The app has no Dock icon, remembers its settings, and can start at login.
 
-With display automation enabled, the toolbox disables the built-in panel when at least one usable external display is active and restores it when the last external display disconnects.
+## Requirements
 
-External-display removal is handled immediately from CoreGraphics' removal event, outside the callback itself. A short debounced topology check then reconciles the final state. This avoids waiting for macOS' external-display entry to disappear from a later topology snapshot.
+- macOS 14 or later
+- Apple Silicon or Intel Mac
+- Swift 6 command-line tools to build from source
 
-## Build and run
+No administrator access, daemon, kernel extension, or SIP change is required.
+
+## Build and install
+
+Build an ad-hoc-signed app bundle:
 
 ```sh
-chmod +x scripts/package-app.sh
 scripts/package-app.sh
-open dist/InternalDisplayAutoOff.app
 ```
 
-The app has no Dock icon. Use the toolbox icon in the menu bar to manage its features, enable launch at login, or quit.
-
-## Important private-API caveat
-
-macOS has no public API for disabling the open built-in panel. This utility dynamically loads `SLSConfigureDisplayEnabled` from Apple's private SkyLight framework. It is intended for local/personal use, is not Mac App Store compatible, and may stop working after a macOS update. When the private symbol is unavailable, the app reports that state and does not fall back to brightness tricks or mirroring.
-
-## Safety and recovery
-
-- The app refuses to disable the built-in panel unless CoreGraphics reports another active, online, non-mirrored display with usable pixel dimensions.
-- The internal display ID is cached before any disable attempt.
-- The last-known internal display ID is persisted so a later launch can still offer recovery after an abnormal termination.
-- The app restores the panel after the last external display disconnects and when quitting normally.
-- Display changes happen only after a debounced re-evaluation, never inside the CoreGraphics callback.
-
-If the panel does not restore, reconnect an external display, open the menu-bar item, and choose **Restore Internal Display**. Logging out or restarting resets session display configuration. Avoid force-killing the process while the built-in display is disabled, because macOS does not deliver normal termination cleanup after `SIGKILL`.
-
-## Logs
+The result is written to `dist/Mac Toolbox.app`. You can run it in place:
 
 ```sh
-log stream --style compact --predicate 'process == "InternalDisplayAutoOff"'
+open "dist/Mac Toolbox.app"
 ```
+
+Or install it in `/Applications`:
+
+```sh
+ditto "dist/Mac Toolbox.app" "/Applications/Mac Toolbox.app"
+open "/Applications/Mac Toolbox.app"
+```
+
+Once it is running, open the toolbox icon in the menu bar. Turn on **Launch at Login** if you want its rules enforced after every login.
+
+## Built-in display control
+
+When **Auto-disable Built-in Display** is enabled, Mac Toolbox reads the current CoreGraphics display topology and looks for an active external display that is online, not mirrored, and has usable pixel dimensions. Only then will it ask macOS to disable the built-in panel.
+
+The panel is restored when:
+
+- the last usable external display is removed;
+- the Mac wakes without an external display;
+- you choose **Restore Internal Display**; or
+- Mac Toolbox quits normally.
+
+Display-removal events get an immediate recovery path, followed by a debounced topology check. This matters because CoreGraphics can report the removal event before its display list has fully caught up.
+
+### Private API warning
+
+macOS does not expose a public API for disabling the panel of an open MacBook. Mac Toolbox dynamically loads `SLSConfigureDisplayEnabled` from Apple's private SkyLight framework.
+
+That has two practical consequences:
+
+1. This app is for personal use and cannot be distributed through the Mac App Store.
+2. A macOS update may change or remove the private function and require a code update here.
+
+If SkyLight is unavailable, the app reports that display control is unsupported. It does not fall back to brightness tricks or display mirroring.
+
+### Recovery
+
+The app saves the last known built-in display ID before changing anything and verifies the observed topology after each operation. It also refuses to disable the panel unless another usable display is active.
+
+If the built-in display ever fails to return:
+
+1. Reconnect an external display.
+2. Open Mac Toolbox from the menu bar.
+3. Choose **Restore Internal Display**.
+
+Logging out or restarting also resets the session's display configuration. Avoid force-killing Mac Toolbox while the built-in panel is disabled, since `SIGKILL` does not allow the normal quit handler to restore it.
+
+## Apple Music blocking
+
+With **Block Apple Music** enabled, Mac Toolbox listens for application launches and checks once per second as a fallback. When the real system Music app appears, it first requests a normal termination and force-terminates it after a short grace period if necessary.
+
+The match uses both:
+
+- bundle identifier: `com.apple.Music`
+- bundle path: `/System/Applications/Music.app`
+
+Checking both values prevents the blocker from closing an unrelated app that happens to reuse Music's bundle identifier. Disabling the switch immediately pauses the rule; it does not modify or remove Apple's app.
+
+## Design
+
+Mac Toolbox is a small SwiftUI and AppKit application built with Swift Package Manager.
+
+| Component | Responsibility |
+| --- | --- |
+| `MacToolboxApp` | Menu-bar UI and application lifecycle |
+| `DisplayManager` | Display state, user settings, and recovery decisions |
+| `DisplayMonitor` | CoreGraphics callbacks plus sleep and wake notifications |
+| `DisplayTopology` | Snapshot of active, online, mirrored, and built-in displays |
+| `DisplaySwitchPolicy` | Testable rules for immediate restoration |
+| `SkyLightBackend` | Narrow wrapper around the private display API |
+| `MusicBlocker` | Launch observation, periodic checks, and termination |
+| `MusicBlockPolicy` | Exact identification of the system Music app |
+
+The code deliberately keeps policy separate from AppKit side effects so the important decisions can be tested without changing the current display configuration or launching applications.
+
+## Development
+
+Build the executable directly:
+
+```sh
+swift build
+```
+
+Run the policy tests:
+
+```sh
+swift test
+```
+
+Watch the installed app's logs:
+
+```sh
+log stream --style compact --predicate 'process == "MacToolbox"'
+```
+
+The packaging script creates a conventional `.app` bundle, copies the release executable and property list into place, and applies an ad-hoc signature. There are no third-party runtime dependencies.
+
+## Scope
+
+This is intentionally a personal toolbox rather than a general-purpose system utility. New features should be small, visible in the menu, independently reversible, and understandable from the source. Anything that needs elevated privileges or quietly changes system configuration belongs somewhere else.

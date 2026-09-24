@@ -1,8 +1,8 @@
-# InternalDisplayAutoOff handoff
+# Mac Toolbox handoff
 
 ## Goal
 
-Build and run a tiny native macOS menu-bar utility that disables the built-in MacBook display while a usable external display is active, then restores it when the last external display disconnects.
+Build and run a personal native macOS menu-bar toolbox. It manages the built-in display and blocks Apple Music.
 
 ## Current understanding
 
@@ -22,7 +22,8 @@ Build and run a tiny native macOS menu-bar utility that disables the built-in Ma
 - `DisplayMonitor`: CoreGraphics callback plus sleep/wake notifications; debounces topology changes.
 - `DisplayManager`: owns observable status and the safety-first auto-mode state machine.
 - `SkyLightBackend`: `dlopen`/`dlsym`, with CoreGraphics begin/complete configuration calls.
-- SwiftUI `MenuBarExtra`: status, Auto toggle, Restore, launch-at-login when available, and Quit.
+- `MusicBlocker`: closes the system Music app when it launches.
+- SwiftUI `MenuBarExtra`: feature controls, status, launch at login, and Quit.
 - SwiftPM builds the executable; a packaging script creates a standard `.app` bundle.
 
 ## Safety invariants
@@ -34,18 +35,9 @@ Build and run a tiny native macOS menu-bar utility that disables the built-in Ma
 5. If SkyLight is unavailable or returns an error, report unsupported/failure and do not substitute another technique.
 6. Configuration work runs after the display callback, on the main queue, with debounce.
 
-## Exact next steps
-
-1. Create the Swift package, app sources, property list, packaging script, and README.
-2. Build with SwiftPM and fix compile/link issues.
-3. Inspect the current display topology before launch.
-4. Package and launch the app.
-5. Verify the process and visible menu-bar item; inspect logs and observed display state.
-6. Exercise only safe state paths available with the currently connected hardware.
-
 ## Done criteria
 
-- Project exists at `~/Desktop/InternalDisplayAutoOff`.
+- Project builds as the `MacToolbox` Swift package and packages as `Mac Toolbox.app`.
 - Release build and `.app` packaging succeed.
 - App launches and its menu-bar UI is visible.
 - External-display auto-disable is tested only when another usable display is confirmed; otherwise detection and no-external safety paths are validated.

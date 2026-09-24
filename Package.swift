@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "InternalDisplayAutoOff",
+    name: "MacToolbox",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "InternalDisplayAutoOff", targets: ["InternalDisplayAutoOff"])
+        .executable(name: "MacToolbox", targets: ["MacToolbox"])
     ],
     targets: [
         .executableTarget(
-            name: "InternalDisplayAutoOff",
+            name: "MacToolbox",
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("CoreGraphics"),
@@ -17,8 +17,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "InternalDisplayAutoOffTests",
-            dependencies: ["InternalDisplayAutoOff"]
+            name: "MacToolboxTests",
+            dependencies: ["MacToolbox"]
         )
     ]
 )
