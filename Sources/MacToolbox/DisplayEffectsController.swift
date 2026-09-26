@@ -4,21 +4,39 @@ import SystemControlsShim
 
 @MainActor
 final class DisplayEffectsController: ObservableObject {
+    private static let nightShiftStatusDidChange = Notification.Name(
+        "MTBNightShiftStatusDidChange"
+    )
+
     @Published private(set) var colorFilterEnabled = false
     @Published private(set) var nightShiftEnabled = false
     @Published private(set) var colorFilterAvailable = false
     @Published private(set) var nightShiftAvailable = false
     @Published private(set) var status = ""
 
+    private var nightShiftStatusObserver: AnyCancellable?
+
     init() {
         refresh()
+        nightShiftStatusObserver = NotificationCenter.default.publisher(
+            for: Self.nightShiftStatusDidChange
+        )
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+            self?.refreshNightShiftStatus()
+        }
+        _ = MTBStartNightShiftStatusNotifications()
     }
 
     func refresh() {
         colorFilterAvailable = MTBColorFilterIsAvailable()
-        nightShiftAvailable = MTBNightShiftIsAvailable()
         colorFilterEnabled = colorFilterAvailable && MTBColorFilterIsEnabled()
-        nightShiftEnabled = nightShiftAvailable && MTBNightShiftIsEnabled()
+        refreshNightShiftStatus()
+    }
+
+    private func refreshNightShiftStatus() {
+        nightShiftAvailable = MTBNightShiftIsAvailable()
+        nightShiftEnabled = nightShiftAvailable && MTBNightShiftIsActive()
     }
 
     func setColorFilterEnabled(_ enabled: Bool) {

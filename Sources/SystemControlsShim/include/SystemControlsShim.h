@@ -8,7 +8,8 @@ bool MTBColorFilterIsEnabled(void);
 bool MTBSetColorFilterEnabled(bool enabled);
 
 bool MTBNightShiftIsAvailable(void);
-bool MTBNightShiftIsEnabled(void);
+bool MTBNightShiftIsActive(void);
 bool MTBSetNightShiftEnabled(bool enabled);
+bool MTBStartNightShiftStatusNotifications(void);
 
 #endif

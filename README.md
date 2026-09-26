@@ -111,7 +111,7 @@ Checking both values prevents the blocker from closing an unrelated app that hap
 
 ## Display effects
 
-The **Color Filters** and **Night Shift** switches control the corresponding macOS display settings directly. They do not invoke Apple Shortcuts. Their state is read from the system when the app starts and refreshed as the menu-bar app updates.
+The **Color Filters** and **Night Shift** switches control the corresponding macOS display settings directly. They do not invoke Apple Shortcuts. Their state is read from the system when the app starts and refreshed as the menu-bar app updates. The Night Shift switch reflects whether the effect is active right now and listens for macOS status changes, so it follows the system's gradual Sunset to Sunrise transition in real time instead of remaining on during daylight hours merely because a schedule is enabled.
 
 These controls use macOS interfaces that Apple does not document for third-party apps: MediaAccessibility preferences for Color Filters and CoreBrightness for Night Shift. Like the built-in display control, they may require maintenance after a macOS update.
 

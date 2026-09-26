@@ -69,7 +69,11 @@ bool MTBSetColorFilterEnabled(bool enabled) {
 @interface MTBBlueLightClient : NSObject
 - (BOOL)getBlueLightStatus:(void *)status;
 - (BOOL)setEnabled:(BOOL)enabled;
+- (void)setStatusNotificationBlock:(void (^)(void))block;
+- (void)enableNotifications;
 @end
+
+static NSString * const MTBNightShiftStatusDidChange = @"MTBNightShiftStatusDidChange";
 
 static MTBBlueLightClient *MTBNightShiftClient(void) {
     static MTBBlueLightClient *client;
@@ -95,19 +99,40 @@ bool MTBNightShiftIsAvailable(void) {
         [client respondsToSelector:@selector(setEnabled:)];
 }
 
-bool MTBNightShiftIsEnabled(void) {
+bool MTBNightShiftIsActive(void) {
     MTBBlueLightClient *client = MTBNightShiftClient();
     // CoreBrightness's private status structure has changed between macOS
-    // releases. Its first two fields remain the active and enabled BOOLs;
-    // reserve ample aligned storage so additions cannot overwrite our stack.
+    // releases. Its first two fields remain the active and enabled BOOLs.
+    // Read the active field so a Sunset to Sunrise schedule is reflected by
+    // the menu instead of appearing enabled throughout the daytime. Reserve
+    // ample aligned storage so additions cannot overwrite our stack.
     union {
         max_align_t alignment;
         unsigned char bytes[128];
     } status = {0};
-    return client && [client getBlueLightStatus:&status] && status.bytes[1] != 0;
+    return client && [client getBlueLightStatus:&status] && status.bytes[0] != 0;
 }
 
 bool MTBSetNightShiftEnabled(bool enabled) {
     MTBBlueLightClient *client = MTBNightShiftClient();
     return client && [client setEnabled:enabled];
+}
+
+bool MTBStartNightShiftStatusNotifications(void) {
+    MTBBlueLightClient *client = MTBNightShiftClient();
+    if (!client || ![client respondsToSelector:@selector(setStatusNotificationBlock:)]) {
+        return false;
+    }
+
+    [client setStatusNotificationBlock:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter]
+                postNotificationName:MTBNightShiftStatusDidChange
+                object:nil];
+        });
+    }];
+    if ([client respondsToSelector:@selector(enableNotifications)]) {
+        [client enableNotifications];
+    }
+    return true;
 }
